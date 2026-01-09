@@ -1,0 +1,163 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Корзина{% endblock title %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <h2 class="mb-4">
+            <i class="bi bi-cart3 text-primary"></i> Корзина
+        </h2>
+
+        {% if cart %}
+        <div class="row g-4">
+            <!-- Список товаров -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-0">Товар</th>
+                                        <th class="border-0 text-center">Цена</th>
+                                        <th class="border-0 text-center">Количество</th>
+                                        <th class="border-0 text-center">Сумма</th>
+                                        <th class="border-0"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart %}
+                                    {% with product=item.product %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3 p-2">
+                                                {% if product.image %}
+                                                <img src="{{ product.image.url }}" 
+                                                     alt="{{ product.name }}" 
+                                                     class="rounded" 
+                                                     style="width: 60px; height: 60px; object-fit: cover;">
+                                                {% endif %}
+                                                <div>
+                                                    <h6 class="mb-1">{{ product.name }}</h6>
+                                                    <small class="text-muted">{{ product.category.name }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <span class="fw-bold">{{ item.price|floatformat:0 }} ₽</span>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <form action="{% url 'cart:cart_add' product.id %}" method="post" class="d-inline-flex align-items-center gap-2">
+                                                {% csrf_token %}
+                                                {{ item.update_quantity_form.quantity }}
+                                                {{ item.update_quantity_form.override }}
+                                                <button type="submit" class="btn btn-sm btn-outline-primary" title="Обновить">
+                                                    <i class="bi bi-arrow-clockwise"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <span class="fw-bold text-primary">{{ item.total_price|floatformat:0 }} ₽</span>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <form action="{% url 'cart:cart_remove' product.id %}" method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки управления -->
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Продолжить покупки
+                    </a>
+                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#clearCartModal">
+                        <i class="bi bi-x-circle"></i> Очистить корзину
+                    </button>
+                </div>
+            </div>
+
+            <!-- Итоговая информация -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm sticky-top" style="top: 100px;">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Итого</h5>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Товары:</span>
+                            <span>{{ cart|length }} шт</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Сумма:</span>
+                            <span>{{ cart.get_total_price|floatformat:0 }} ₽</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Доставка:</span>
+                            <span class="text-success">Бесплатно</span>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="h5 mb-0">Итого:</span>
+                            <span class="h5 mb-0 text-primary">{{ cart.get_total_price|floatformat:0 }} ₽</span>
+                        </div>
+                        
+                        <a href="#" class="btn btn-primary w-100 btn-lg">
+                            <i class="bi bi-credit-card"></i> Оформить заказ
+                        </a>
+                        
+                        <small class="text-muted d-block text-center mt-2">
+                            <i class="bi bi-shield-check"></i> Безопасная оплата
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Пустая корзина -->
+        <div class="text-center py-5">
+            <i class="bi bi-cart-x display-1 text-muted"></i>
+            <h4 class="text-muted mt-4">Ваша корзина пуста</h4>
+            <p class="text-muted mb-4">Добавьте товары, чтобы продолжить покупки</p>
+            <a href="{% url 'main:product_list' %}" class="btn btn-primary">
+                <i class="bi bi-arrow-left"></i> Перейти к покупкам
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальное окно очистки корзины -->
+<div class="modal fade" id="clearCartModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Очистить корзину</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Вы уверены, что хотите удалить все товары из корзины?</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <a href="{% url 'cart:cart_clear' %}" class="btn btn-danger">Очистить</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

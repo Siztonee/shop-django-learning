@@ -82,12 +82,13 @@
 
         <!-- Кнопки действий -->
         <div class="d-flex gap-2 mb-4">
-            <button class="btn btn-primary btn-lg flex-fill" {% if not product.in_stock %}disabled{% endif %}>
-                <i class="bi bi-cart-plus"></i> Добавить в корзину
-            </button>
-            <button class="btn btn-outline-secondary btn-lg">
-                <i class="bi bi-heart"></i>
-            </button>
+            <form action="{% url 'cart:cart_add' product.id %}" method="POST">
+                {{ cart_product_form }}
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-lg flex-fill mt-3" {% if not product.available %}disabled{% endif %}>
+                    <i class="bi bi-cart-plus"></i> Добавить в корзину
+                </button>
+            </form>
         </div>
     </div>
 </div>
